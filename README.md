@@ -2,7 +2,7 @@
 
 API en FastAPI (Serverless Vercel) para predecir el riesgo de crédito utilizando un modelo de Machine Learning (`HistGradientBoosting`). Incluye explicabilidad en tiempo real de las predicciones a través de la librería SHAP.
 
-## 🚀 Características Principales
+## 🚀 Características principales
 
 - **Machine Learning**: Modelo `HistGradientBoostingClassifier` entrenado para predecir la probabilidad de incumplimiento de pago (Credit Scoring).
 - **Interpretabilidad**: Integración con **SHAP** para entender cómo cada variable financiera del solicitante impacta en la decisión del modelo.
@@ -18,7 +18,7 @@ API en FastAPI (Serverless Vercel) para predecir el riesgo de crédito utilizand
 - Polars / Pandas
 - Vercel
 
-## 📦 Instalación y Uso Local
+## 📦 Instalación y uso Local
 
 1. **Clonar el repositorio**:
    ```bash
