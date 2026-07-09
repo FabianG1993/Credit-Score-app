@@ -202,14 +202,6 @@ class ApplicantData(BaseModel):
 # ---------------------------------------------------------------------------
 # Endpoints
 # ---------------------------------------------------------------------------
-@app.get("/")
-@limiter.limit("60/minute")
-async def root_redirect(request: Request):
-    """Redirect to the API documentation."""
-    from fastapi.responses import RedirectResponse
-    return RedirectResponse(url="/api/docs")
-
-
 @app.get("/api/health")
 @limiter.limit("60/minute")
 async def health_check(request: Request):
@@ -322,3 +314,14 @@ async def predict_risk(data: ApplicantData, request: Request):
     )
 
     return response
+
+
+# ---------------------------------------------------------------------------
+# Static Files (for local development)
+# ---------------------------------------------------------------------------
+from fastapi.staticfiles import StaticFiles
+
+public_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "public")
+if os.path.isdir(public_dir):
+    app.mount("/", StaticFiles(directory=public_dir, html=True), name="public")
+
