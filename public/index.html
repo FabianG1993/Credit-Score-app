@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CreditVision AI — Credit Risk Assessment</title>
+    <meta name="description" content="CreditVision AI uses machine learning and SHAP interpretability to provide real-time credit risk assessments. Analyze default probability with explainable AI.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/index.css">
+    <!-- Chart.js for the risk gauge visualization -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
+</head>
+<body>
+    <noscript>
+        <div class="noscript-banner">
+            <strong>JavaScript Required</strong> — CreditVision AI needs JavaScript to run the risk assessment engine. Please enable JavaScript in your browser settings.
+        </div>
+    </noscript>
+
+    <div class="app-container">
+        <header>
+            <div class="logo">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                    <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M2 17L12 22L22 17" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M2 12L12 17L22 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                <span>CreditVision AI</span>
+            </div>
+            <p class="subtitle">Real-time ML risk assessment and SHAP interpretability</p>
+        </header>
+
+        <main>
+            <section class="form-section panel" aria-label="Applicant information form">
+                <h2>Applicant Details</h2>
+                <form id="prediction-form" novalidate>
+                    <div class="form-grid">
+                        <div class="input-group">
+                            <label for="age">Age</label>
+                            <input type="number" id="age" name="age" required value="45" min="18" max="100"
+                                   aria-describedby="age-hint" data-min="18" data-max="100">
+                            <small id="age-hint" class="field-hint">Between 18 and 100</small>
+                        </div>
+                        <div class="input-group">
+                            <label for="MonthlyIncome">Monthly Income ($)</label>
+                            <input type="number" id="MonthlyIncome" name="MonthlyIncome" required value="5000"
+                                   aria-describedby="income-hint" data-min="0">
+                            <small id="income-hint" class="field-hint">Gross monthly income</small>
+                        </div>
+                        <div class="input-group">
+                            <label for="DebtRatio">Debt Ratio</label>
+                            <input type="number" step="0.01" id="DebtRatio" name="DebtRatio" required value="0.35"
+                                   aria-describedby="debt-hint" data-min="0" data-max="5">
+                            <small id="debt-hint" class="field-hint">Monthly debt ÷ income (0–5)</small>
+                        </div>
+                        <div class="input-group">
+                            <label for="RevolvingUtilizationOfUnsecuredLines">Credit Utilization</label>
+                            <input type="number" step="0.01" id="RevolvingUtilizationOfUnsecuredLines"
+                                   name="RevolvingUtilizationOfUnsecuredLines" required value="0.2"
+                                   aria-describedby="util-hint" data-min="0" data-max="1">
+                            <small id="util-hint" class="field-hint">Balance ÷ credit limit (0–1)</small>
+                        </div>
+                        <div class="input-group">
+                            <label for="NumberOfDependents">Number of Dependents</label>
+                            <input type="number" id="NumberOfDependents" name="NumberOfDependents" required value="1"
+                                   aria-describedby="dep-hint" data-min="0">
+                            <small id="dep-hint" class="field-hint">People financially dependent on you</small>
+                        </div>
+                        <div class="input-group">
+                            <label for="NumberOfOpenCreditLinesAndLoans">Open Credit Lines/Loans</label>
+                            <input type="number" id="NumberOfOpenCreditLinesAndLoans"
+                                   name="NumberOfOpenCreditLinesAndLoans" required value="8"
+                                   aria-describedby="credit-hint" data-min="0">
+                            <small id="credit-hint" class="field-hint">Active credit accounts</small>
+                        </div>
+                        <div class="input-group">
+                            <label for="NumberRealEstateLoansOrLines">Real Estate Loans</label>
+                            <input type="number" id="NumberRealEstateLoansOrLines"
+                                   name="NumberRealEstateLoansOrLines" required value="1"
+                                   aria-describedby="realestate-hint" data-min="0">
+                            <small id="realestate-hint" class="field-hint">Mortgage or HELOC count</small>
+                        </div>
+                        <div class="input-group">
+                            <label for="NumberOfTimes90DaysLate">Times 90+ Days Late</label>
+                            <input type="number" id="NumberOfTimes90DaysLate"
+                                   name="NumberOfTimes90DaysLate" required value="0"
+                                   aria-describedby="late90-hint" data-min="0">
+                            <small id="late90-hint" class="field-hint">Severe delinquency count</small>
+                        </div>
+                        <div class="input-group">
+                            <label for="NumberOfTime60_89DaysPastDueNotWorse">Times 60-89 Days Late</label>
+                            <input type="number" id="NumberOfTime60_89DaysPastDueNotWorse"
+                                   name="NumberOfTime60_89DaysPastDueNotWorse" required value="0"
+                                   aria-describedby="late60-hint" data-min="0">
+                            <small id="late60-hint" class="field-hint">Moderate delinquency count</small>
+                        </div>
+                        <div class="input-group">
+                            <label for="NumberOfTime30_59DaysPastDueNotWorse">Times 30-59 Days Late</label>
+                            <input type="number" id="NumberOfTime30_59DaysPastDueNotWorse"
+                                   name="NumberOfTime30_59DaysPastDueNotWorse" required value="0"
+                                   aria-describedby="late30-hint" data-min="0">
+                            <small id="late30-hint" class="field-hint">Minor delinquency count</small>
+                        </div>
+                    </div>
+                    <div class="form-actions">
+                        <button type="submit" class="btn-primary" id="submit-btn">
+                            <span>Analyze Risk</span>
+                            <div class="loader" id="btn-loader" style="display: none;"></div>
+                        </button>
+                        <button type="button" class="btn-secondary" id="reset-btn">Reset</button>
+                    </div>
+                    <div id="message-box" class="message-box" aria-live="polite"></div>
+                </form>
+            </section>
+
+            <section class="results-section" aria-label="Prediction results">
+                <div class="panel score-panel" id="score-container">
+                    <div class="empty-state">
+                        <p>Fill out the form to generate a risk assessment</p>
+                    </div>
+                    <div class="score-content" style="display: none;">
+                        <h2>Default Risk Score</h2>
+                        <div class="gauge-container" role="img" aria-label="Risk score gauge chart">
+                            <canvas id="scoreGauge"></canvas>
+                            <div class="score-text">
+                                <span id="risk-percentage">--%</span>
+                                <span class="score-label" id="risk-category">Unknown</span>
+                            </div>
+                        </div>
+                        <div class="score-details">
+                            <span id="baseline-value">Baseline default probability: --%</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="panel shap-panel" id="shap-container">
+                    <h2>AI Interpretability (SHAP)</h2>
+                    <p class="shap-subtitle">Key factors influencing this specific prediction</p>
+                    <div class="empty-state">
+                        <p>Waiting for analysis...</p>
+                    </div>
+                    <div class="shap-content" style="display: none;">
+                        <ul class="shap-list" id="shap-list" role="list" aria-label="SHAP feature impacts">
+                            <!-- Populated by JS -->
+                        </ul>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+    <script src="/app.js" defer></script>
+</body>
+</html>

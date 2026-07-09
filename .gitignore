@@ -1,0 +1,40 @@
+# Data files (too large for version control)
+*.csv
+
+# Trained model (regenerate via model.py)
+# Uncomment next line if you do NOT want the model in version control.
+# If deploying to Vercel, keep it committed since the serverless function needs it.
+# credit_score_model.pkl
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# Virtual environments
+creditscore/
+venv/
+.venv/
+env/
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+Thumbs.db
+.DS_Store
+
+# Vercel
+.vercel/
