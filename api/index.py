@@ -202,6 +202,14 @@ class ApplicantData(BaseModel):
 # ---------------------------------------------------------------------------
 # Endpoints
 # ---------------------------------------------------------------------------
+@app.get("/")
+@limiter.limit("60/minute")
+async def root_redirect(request: Request):
+    """Redirect to the API documentation."""
+    from fastapi.responses import RedirectResponse
+    return RedirectResponse(url="/api/docs")
+
+
 @app.get("/api/health")
 @limiter.limit("60/minute")
 async def health_check(request: Request):
