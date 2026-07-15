@@ -42,7 +42,7 @@ app = FastAPI(
 app.add_middleware(GZipMiddleware, minimum_size=500)
 
 # CORS — restrict to allowed origins via env var; defaults to permissive for local dev
-ALLOWED_ORIGINS = os.getenv("ALLOWED_ORIGINS", "http://localhost:3000,http://localhost:8000").split(",")
+ALLOWED_ORIGINS = os.getenv("ALLOWED_ORIGINS", "*").split(",")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=ALLOWED_ORIGINS,
