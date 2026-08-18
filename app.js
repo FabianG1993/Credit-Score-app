@@ -27,16 +27,16 @@ function clearMessage() {
 // Field-Level Validation
 // ---------------------------------------------------------------------------
 const VALIDATION_RULES = {
-    age:  { min: 18, max: 100, label: 'Age', integer: true },
-    MonthlyIncome: { min: 0, label: 'Monthly Income' },
-    DebtRatio: { min: 0, max: 5, label: 'Debt Ratio' },
-    RevolvingUtilizationOfUnsecuredLines: { min: 0, max: 1, label: 'Credit Utilization' },
-    NumberOfDependents: { min: 0, label: 'Dependents' },
-    NumberOfOpenCreditLinesAndLoans: { min: 0, label: 'Open Credit Lines', integer: true },
-    NumberRealEstateLoansOrLines: { min: 0, label: 'Real Estate Loans', integer: true },
-    NumberOfTimes90DaysLate: { min: 0, label: 'Times 90+ Days Late', integer: true },
-    NumberOfTime60_89DaysPastDueNotWorse: { min: 0, label: 'Times 60-89 Days Late', integer: true },
-    NumberOfTime30_59DaysPastDueNotWorse: { min: 0, label: 'Times 30-59 Days Late', integer: true },
+    age:  { min: 18, max: 100, label: 'Edad', integer: true },
+    MonthlyIncome: { min: 0, label: 'Ingreso Mensual' },
+    DebtRatio: { min: 0, max: 5, label: 'Ratio de Deuda' },
+    RevolvingUtilizationOfUnsecuredLines: { min: 0, max: 1, label: 'Utilización de Crédito' },
+    NumberOfDependents: { min: 0, label: 'Dependientes' },
+    NumberOfOpenCreditLinesAndLoans: { min: 0, label: 'Líneas de Crédito Abiertas', integer: true },
+    NumberRealEstateLoansOrLines: { min: 0, label: 'Préstamos Inmobiliarios', integer: true },
+    NumberOfTimes90DaysLate: { min: 0, label: 'Veces 90+ Días de Atraso', integer: true },
+    NumberOfTime60_89DaysPastDueNotWorse: { min: 0, label: 'Veces 60-89 Días de Atraso', integer: true },
+    NumberOfTime30_59DaysPastDueNotWorse: { min: 0, label: 'Veces 30-59 Días de Atraso', integer: true },
 };
 
 function validateField(input) {
@@ -48,15 +48,15 @@ function validateField(input) {
 
     if (isNaN(val)) {
         input.classList.add('input-error');
-        return `${rules.label} is required.`;
+        return `${rules.label} es requerido.`;
     }
     if (rules.min !== undefined && val < rules.min) {
         input.classList.add('input-error');
-        return `${rules.label} must be at least ${rules.min}.`;
+        return `${rules.label} debe ser al menos ${rules.min}.`;
     }
     if (rules.max !== undefined && val > rules.max) {
         input.classList.add('input-error');
-        return `${rules.label} must be at most ${rules.max}.`;
+        return `${rules.label} debe ser como máximo ${rules.max}.`;
     }
 
     input.classList.remove('input-error');
@@ -146,13 +146,13 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             updateUI(result);
-            displayMessage('Prediction loaded successfully.', 'success');
+            displayMessage('Predicción cargada exitosamente.', 'success');
 
         } catch (error) {
             console.error('Error fetching prediction:', error);
             const msg = error.message === 'Failed to fetch'
-                ? 'Cannot reach the server. Please ensure the backend is running.'
-                : error.message || 'Failed to get prediction. Check inputs and try again.';
+                ? 'No se puede conectar al servidor. Asegúrate de que el backend esté en ejecución.'
+                : error.message || 'Error al obtener la predicción. Revisa los datos e intenta de nuevo.';
             displayMessage(msg, 'error');
         } finally {
             submitBtn.disabled = false;
@@ -212,7 +212,7 @@ function updateUI(result) {
     }
     labelEl.style.color = color;
 
-    baselineEl.innerText = `Baseline default probability: ${(result.base_value * 100).toFixed(1)}%`;
+    baselineEl.innerText = `Probabilidad base de incumplimiento: ${(result.base_value * 100).toFixed(1)}%`;
 
     if (gaugeChart) {
         updateGauge(result.risk_percentage, color);
@@ -241,7 +241,7 @@ function renderShap(result) {
     if (!Array.isArray(breakdown) || breakdown.length === 0) {
         const emptyMessage = document.createElement('li');
         emptyMessage.className = 'shap-empty';
-        emptyMessage.textContent = 'SHAP interpretability is not available for this prediction.';
+        emptyMessage.textContent = 'La interpretabilidad SHAP no está disponible para esta predicción.';
         list.appendChild(emptyMessage);
         return;
     }
@@ -253,14 +253,14 @@ function renderShap(result) {
         li.className = `shap-item ${isIncrease ? 'increases-risk' : 'decreases-risk'}`;
 
         const friendlyName = factor.friendly_name || factor.feature;
-        const impactText = isIncrease ? '↑ Increases Risk' : '↓ Decreases Risk';
+        const impactText = isIncrease ? '↑ Aumenta el Riesgo' : '↓ Disminuye el Riesgo';
         const impactClass = isIncrease ? 'impact-high' : 'impact-low';
         const valueText = Number.isFinite(factor.value) ? factor.value.toFixed(2) : factor.value;
 
         li.innerHTML = `
             <div class="shap-feature">
                 <span class="feature-name">${friendlyName}</span>
-                <span class="feature-val">Input Value: ${valueText}</span>
+                <span class="feature-val">Valor de Entrada: ${valueText}</span>
             </div>
             <div class="shap-impact ${impactClass}">
                 ${impactText}
