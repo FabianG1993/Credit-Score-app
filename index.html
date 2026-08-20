@@ -4,13 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CreditVision AI — Evaluación de Riesgo Crediticio</title>
-    <meta name="description" content="CreditVision AI utiliza aprendizaje automático e interpretabilidad SHAP para proporcionar evaluaciones de riesgo crediticio en tiempo real. Analiza la probabilidad de incumplimiento con IA explicable.">
+    <meta name="description" content="Demostración de probabilidad estimada de incumplimiento; no toma decisiones crediticias.">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/index.css">
-    <!-- Chart.js for the risk gauge visualization -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
 </head>
 <body>
     <noscript>
@@ -29,12 +27,13 @@
                 </svg>
                 <span>CreditVision AI</span>
             </div>
-            <p class="subtitle">Evaluación de riesgo con ML en tiempo real e interpretabilidad SHAP</p>
+            <p class="subtitle">Demostración de probabilidad estimada de incumplimiento</p>
         </header>
 
         <main>
             <section class="form-section panel" aria-label="Formulario de información del solicitante">
-                <h2>Datos del Solicitante</h2>
+                <h2>Datos de demostración</h2>
+                <p class="disclaimer" role="note">Resultado informativo para demostración. No constituye aprobación, rechazo ni oferta de crédito.</p>
                 <form id="prediction-form" novalidate>
                     <div class="form-grid">
                         <div class="input-group">
@@ -47,7 +46,7 @@
                             <label for="MonthlyIncome">Ingreso Mensual ($)</label>
                             <input type="number" id="MonthlyIncome" name="MonthlyIncome" required value="5000"
                                    aria-describedby="income-hint" data-min="0">
-                            <small id="income-hint" class="field-hint">Ingreso mensual bruto</small>
+                            <small id="income-hint" class="field-hint">Monto mensual bruto, moneda de referencia: USD (0–1.000.000)</small>
                         </div>
                         <div class="input-group">
                             <label for="DebtRatio">Ratio de Deuda</label>
@@ -66,7 +65,7 @@
                             <label for="NumberOfDependents">Número de Dependientes</label>
                             <input type="number" id="NumberOfDependents" name="NumberOfDependents" required value="1"
                                    aria-describedby="dep-hint" data-min="0">
-                            <small id="dep-hint" class="field-hint">Personas que dependen económicamente de ti</small>
+                            <small id="dep-hint" class="field-hint">Personas que dependen económicamente (0–20)</small>
                         </div>
                         <div class="input-group">
                             <label for="NumberOfOpenCreditLinesAndLoans">Líneas de Crédito/Préstamos Abiertos</label>
@@ -104,6 +103,8 @@
                             <small id="late30-hint" class="field-hint">Cantidad de morosidad menor</small>
                         </div>
                     </div>
+                    <label class="consent"><input type="checkbox" id="demo-consent" required> Confirmo que uso únicamente datos de demostración, no datos personales reales.</label>
+                    <p class="privacy-note">Privacidad: no se guardan los datos introducidos en el navegador. No ingreses información personal real.</p>
                     <div class="form-actions">
                         <button type="submit" class="btn-primary" id="submit-btn">
                             <span>Analizar Riesgo</span>
@@ -111,17 +112,17 @@
                         </button>
                         <button type="button" class="btn-secondary" id="reset-btn">Restablecer</button>
                     </div>
-                    <div id="message-box" class="message-box" aria-live="polite"></div>
+                    <div id="message-box" class="message-box" role="status" aria-live="polite"></div>
                 </form>
             </section>
 
             <section class="results-section" aria-label="Resultados de la predicción">
                 <div class="panel score-panel" id="score-container">
                     <div class="empty-state">
-                        <p>Completa el formulario para generar una evaluación de riesgo</p>
+                        <p>Completa el formulario para obtener un resultado informativo</p>
                     </div>
                     <div class="score-content" style="display: none;">
-                        <h2>Puntuación de Riesgo de Incumplimiento</h2>
+                        <h2>Probabilidad estimada de incumplimiento</h2>
                         <div class="gauge-container" role="img" aria-label="Gráfico de medidor de puntuación de riesgo">
                             <canvas id="scoreGauge"></canvas>
                             <div class="score-text">
@@ -129,15 +130,13 @@
                                 <span class="score-label" id="risk-category">Desconocido</span>
                             </div>
                         </div>
-                        <div class="score-details">
-                            <span id="baseline-value">Probabilidad base de incumplimiento: --%</span>
-                        </div>
+                        <div class="score-details"><span id="recommendation">Resultado pendiente</span></div>
                     </div>
                 </div>
 
                 <div class="panel shap-panel" id="shap-container">
-                    <h2>Interpretabilidad de IA (SHAP)</h2>
-                    <p class="shap-subtitle">Factores clave que influyen en esta predicción específica</p>
+                    <h2>Factores que influyen en el modelo</h2>
+                    <p class="shap-subtitle">Son factores técnicos del modelo, no razones legales definitivas.</p>
                     <div class="empty-state">
                         <p>Esperando análisis...</p>
                     </div>

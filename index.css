@@ -142,6 +142,12 @@ label {
     color: rgba(148, 163, 184, 0.6);
     line-height: 1.2;
 }
+.field-error { color: #fca5a5; font-size: .75rem; line-height: 1.2; }
+
+.disclaimer, .privacy-note, .consent { color: var(--text-muted); font-size: .9rem; line-height: 1.4; margin: -0.75rem 0 1.25rem; }
+.disclaimer { color: #fcd34d; border-left: 3px solid var(--warning); padding-left: .75rem; }
+.consent { display: flex; gap: .6rem; align-items: flex-start; margin: 0 0 .75rem; }
+.consent input { margin-top: .2rem; accent-color: var(--primary); }
 
 input {
     background: rgba(0, 0, 0, 0.2);

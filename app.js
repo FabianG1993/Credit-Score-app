@@ -7,6 +7,7 @@
 
 let gaugeChart = null;
 const API_URL = '/api/predict';
+let activeRequest = null;
 
 // ---------------------------------------------------------------------------
 // Message Display
@@ -47,20 +48,38 @@ function validateField(input) {
     const val = parseFloat(input.value);
 
     if (isNaN(val)) {
-        input.classList.add('input-error');
-        return `${rules.label} es requerido.`;
+        return setFieldError(input, `${rules.label} es requerido.`);
+    }
+    if (rules.integer && !Number.isInteger(val)) {
+        return setFieldError(input, `${rules.label} debe ser un número entero.`);
     }
     if (rules.min !== undefined && val < rules.min) {
-        input.classList.add('input-error');
-        return `${rules.label} debe ser al menos ${rules.min}.`;
+        return setFieldError(input, `${rules.label} debe ser al menos ${rules.min}.`);
     }
     if (rules.max !== undefined && val > rules.max) {
-        input.classList.add('input-error');
-        return `${rules.label} debe ser como máximo ${rules.max}.`;
+        return setFieldError(input, `${rules.label} debe ser como máximo ${rules.max}.`);
     }
 
     input.classList.remove('input-error');
+    input.removeAttribute('aria-invalid');
+    input.removeAttribute('aria-errormessage');
+    document.getElementById(`${input.id}-error`)?.remove();
     return null;
+}
+
+function setFieldError(input, message) {
+    input.classList.add('input-error');
+    input.setAttribute('aria-invalid', 'true');
+    input.setAttribute('aria-errormessage', `${input.id}-error`);
+    let error = document.getElementById(`${input.id}-error`);
+    if (!error) {
+        error = document.createElement('small');
+        error.id = `${input.id}-error`;
+        error.className = 'field-error';
+        input.closest('.input-group').appendChild(error);
+    }
+    error.textContent = message;
+    return message;
 }
 
 function validateAllFields() {
@@ -70,6 +89,8 @@ function validateAllFields() {
         const error = validateField(input);
         if (error && !firstError) firstError = error;
     });
+    const consent = document.getElementById('demo-consent');
+    if (!consent.checked && !firstError) firstError = 'Debes confirmar el uso de datos de demostración.';
     return firstError;
 }
 
@@ -80,10 +101,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const form = document.getElementById('prediction-form');
     const resetBtn = document.getElementById('reset-btn');
 
-    // Wait for Chart.js to load (deferred script)
-    waitForChartJS(() => {
-        initGauge(0);
-    });
 
     // Field-level validation on blur
     form.querySelectorAll('input').forEach(input => {
@@ -104,6 +121,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const validationError = validateAllFields();
         if (validationError) {
             displayMessage(validationError, 'error');
+            const invalid = form.querySelector('.input-error') || document.getElementById('demo-consent');
+            invalid.focus();
             return;
         }
 
@@ -134,11 +153,15 @@ document.addEventListener('DOMContentLoaded', () => {
         loader.style.display = 'block';
 
         try {
+            if (activeRequest) activeRequest.abort();
+            activeRequest = new AbortController();
+            const timeout = setTimeout(() => activeRequest.abort(), 10000);
             const response = await fetch(API_URL, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
+                body: JSON.stringify(payload), signal: activeRequest.signal
             });
+            clearTimeout(timeout);
 
             const result = await response.json();
             if (!response.ok) {
@@ -146,13 +169,12 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             updateUI(result);
-            displayMessage('Predicción cargada exitosamente.', 'success');
+            displayMessage('Resultado informativo cargado.', 'success');
 
         } catch (error) {
-            console.error('Error fetching prediction:', error);
-            const msg = error.message === 'Failed to fetch'
-                ? 'No se puede conectar al servidor. Asegúrate de que el backend esté en ejecución.'
-                : error.message || 'Error al obtener la predicción. Revisa los datos e intenta de nuevo.';
+            const msg = error.name === 'AbortError' ? 'La solicitud tardó demasiado. Inténtalo de nuevo.'
+                : error.message === 'Failed to fetch' ? 'No se puede conectar al servidor. Asegúrate de que el backend esté en ejecución.'
+                : error.message || 'Error al obtener el resultado. Revisa los datos e intenta de nuevo.';
             displayMessage(msg, 'error');
         } finally {
             submitBtn.disabled = false;
@@ -167,6 +189,8 @@ document.addEventListener('DOMContentLoaded', () => {
         clearMessage();
         // Clear validation errors
         form.querySelectorAll('.input-error').forEach(el => el.classList.remove('input-error'));
+        form.querySelectorAll('.field-error').forEach(el => el.remove());
+        form.querySelectorAll('[aria-invalid]').forEach(el => { el.removeAttribute('aria-invalid'); el.removeAttribute('aria-errormessage'); });
         // Reset results panels
         document.querySelectorAll('.empty-state').forEach(el => el.style.display = 'block');
         document.querySelector('.score-content').style.display = 'none';
@@ -199,23 +223,24 @@ function updateUI(result) {
 
     const scoreEl = document.getElementById('risk-percentage');
     const labelEl = document.getElementById('risk-category');
-    const baselineEl = document.getElementById('baseline-value');
+    const recommendationEl = document.getElementById('recommendation');
 
-    scoreEl.innerText = `${result.risk_percentage.toFixed(1)}%`;
-    labelEl.innerText = result.risk_category || 'Risk';
+    const percentage = result.probability_of_default * 100;
+    scoreEl.textContent = `${percentage.toFixed(1)}%`;
+    labelEl.textContent = result.risk_band || 'Sin categoría';
 
     let color = '#10b981';
-    if (result.risk_percentage > 50) {
+    if (result.risk_band === 'Riesgo alto') {
         color = '#ef4444';
-    } else if (result.risk_percentage > 20) {
+    } else if (result.risk_band === 'Riesgo medio') {
         color = '#f59e0b';
     }
     labelEl.style.color = color;
 
-    baselineEl.innerText = `Probabilidad base de incumplimiento: ${(result.base_value * 100).toFixed(1)}%`;
+    recommendationEl.textContent = `Recomendación: ${result.recommendation}.`;
 
     if (gaugeChart) {
-        updateGauge(result.risk_percentage, color);
+        updateGauge(percentage, color);
     }
     renderShap(result);
 }
@@ -225,18 +250,9 @@ function updateUI(result) {
 // ---------------------------------------------------------------------------
 function renderShap(result) {
     const list = document.getElementById('shap-list');
-    list.innerHTML = '';
+    list.replaceChildren();
 
-    const breakdown = result.shap_breakdown;
-
-    // Show SHAP error if present
-    if (result.shap_error) {
-        const errorItem = document.createElement('li');
-        errorItem.className = 'shap-empty';
-        errorItem.textContent = result.shap_error;
-        list.appendChild(errorItem);
-        return;
-    }
+    const breakdown = result.explanatory_factors;
 
     if (!Array.isArray(breakdown) || breakdown.length === 0) {
         const emptyMessage = document.createElement('li');
@@ -249,23 +265,17 @@ function renderShap(result) {
     // Use friendly_name from backend (single source of truth)
     breakdown.slice(0, 5).forEach(factor => {
         const li = document.createElement('li');
-        const isIncrease = factor.impact > 0;
+        const isIncrease = factor.direction === 'aumenta';
         li.className = `shap-item ${isIncrease ? 'increases-risk' : 'decreases-risk'}`;
 
-        const friendlyName = factor.friendly_name || factor.feature;
+        const friendlyName = factor.label || factor.feature;
         const impactText = isIncrease ? '↑ Aumenta el Riesgo' : '↓ Disminuye el Riesgo';
         const impactClass = isIncrease ? 'impact-high' : 'impact-low';
-        const valueText = Number.isFinite(factor.value) ? factor.value.toFixed(2) : factor.value;
-
-        li.innerHTML = `
-            <div class="shap-feature">
-                <span class="feature-name">${friendlyName}</span>
-                <span class="feature-val">Valor de Entrada: ${valueText}</span>
-            </div>
-            <div class="shap-impact ${impactClass}">
-                ${impactText}
-            </div>
-        `;
+        const feature = document.createElement('div'); feature.className = 'shap-feature';
+        const name = document.createElement('span'); name.className = 'feature-name'; name.textContent = friendlyName;
+        const hint = document.createElement('span'); hint.className = 'feature-val'; hint.textContent = 'Factor técnico del modelo';
+        const impact = document.createElement('div'); impact.className = `shap-impact ${impactClass}`; impact.textContent = impactText;
+        feature.append(name, hint); li.append(feature, impact);
 
         list.appendChild(li);
     });

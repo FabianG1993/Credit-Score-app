@@ -26,6 +26,9 @@ env/
 .env.local
 .env.*.local
 
+# Training artefact metadata is generated, datasets stay outside Git.
+*.metadata.json
+
 # IDE
 .vscode/
 .idea/

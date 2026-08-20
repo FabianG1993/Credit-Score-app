@@ -1,71 +1,46 @@
-# CreditVision AI - Credit Scoring API
+# CreditVision AI
 
-API en FastAPI (Serverless Vercel) para predecir el riesgo de crédito utilizando un modelo de Machine Learning (`HistGradientBoosting`). Incluye explicabilidad en tiempo real de las predicciones a través de la librería SHAP.
+Prototipo educativo de evaluación asistida de riesgo. El modelo estima una **probabilidad de incumplimiento** usando datos de ejemplo/no locales; no aprueba, rechaza ni ofrece créditos.
 
-## 🚀 Características principales
+## Ejecución local
 
-- **Machine Learning**: Modelo `HistGradientBoostingClassifier` entrenado para predecir la probabilidad de incumplimiento de pago (Credit Scoring).
-- **Interpretabilidad**: Integración con **SHAP** para entender cómo cada variable financiera del solicitante impacta en la decisión del modelo.
-- **FastAPI**: Backend rápido e interactivo con documentación automática.
-- **Serverless**: Configurado para desplegarse fácilmente en Vercel.
+Requiere Python 3.10+. Cree un entorno, instale y ejecute un único proceso que sirve API y web:
 
-## 🛠️ Tecnologías
-
-- Python 3.9+
-- FastAPI
-- Scikit-Learn
-- SHAP
-- Polars / Pandas
-- Vercel
-
-## 📦 Instalación y uso Local
-
-1. **Clonar el repositorio**:
-   ```bash
-   git clone https://github.com/FabianG1993/Credit-Score-app.git
-   cd Credit-Score-app
-   ```
-
-2. **Crear y activar un entorno virtual** (opcional pero recomendado):
-   ```bash
-   python -m venv env
-   # En Windows:
-   env\Scripts\activate
-   # En Mac/Linux:
-   source env/bin/activate
-   ```
-
-3. **Instalar dependencias**:
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-4. **Ejecutar la API de forma local**:
-   ```bash
-   uvicorn api.index:app --reload
-   ```
-
-5. **Probar la API**:
-   La API estará disponible en `http://localhost:8000`. Puedes ir a `http://localhost:8000/api/docs` para ver la documentación interactiva generada por FastAPI (Swagger UI) y probar el endpoint `/api/predict`.
-
-## 📡 Ejemplo de Petición (Endpoint `/api/predict`)
-
-**POST** `/api/predict`
-
-```json
-{
-  "RevolvingUtilizationOfUnsecuredLines": 0.2,
-  "age": 45,
-  "NumberOfTime30_59DaysPastDueNotWorse": 0,
-  "DebtRatio": 0.35,
-  "MonthlyIncome": 5000,
-  "NumberOfOpenCreditLinesAndLoans": 8,
-  "NumberOfTimes90DaysLate": 0,
-  "NumberRealEstateLoansOrLines": 1,
-  "NumberOfTime60_89DaysPastDueNotWorse": 0,
-  "NumberOfDependents": 1
-}
+```powershell
+python -m venv .venv
+.venv\\Scripts\\Activate.ps1
+pip install -r requirements.txt
+copy .env.example .env
+uvicorn api.index:app --reload
 ```
 
-**Respuesta**:
-La API devolverá la puntuación de riesgo (`risk_score`), la categoría de riesgo y un desglose (`shap_breakdown`) detallando cómo contribuyó cada variable al resultado final.
+Abra `http://localhost:8000`. La documentación API está en `/api/docs`; salud en `/api/health` y disponibilidad en `/api/ready`.
+
+## Pruebas y calidad
+
+```powershell
+pytest
+ruff check api model.py tests
+```
+
+## Entrenamiento reproducible
+
+Los CSV no se versionan. Con un dataset autorizado que contenga las columnas esperadas:
+
+```powershell
+python model.py --train D:\ruta\train.csv --model credit_score_model.pkl --seed 42 --threshold 0.30
+```
+
+Genera el modelo y un archivo de metadatos (hash del dataset, variables, versiones y métricas ROC-AUC, PR-AUC, KS/Gini, Brier, calibración y matriz de confusión). Los límites de bandas están centralizados en `api/config.py`; son categorías informativas, no política crediticia.
+
+## Arquitectura
+
+`index.html` y `app.js` consumen FastAPI. `api/schemas.py` valida rangos, `api/service.py` carga el artefacto y genera factores cualitativos, y `api/config.py` concentra configuración. La API no registra payloads: registra solo identificador, versión, latencia y errores técnicos sanitizados.
+
+## Despliegue en Vercel
+
+El archivo `vercel.json` sirve los archivos estáticos y enruta `/api/*`. Configure `ALLOWED_ORIGINS` con los orígenes HTTPS exactos y, si corresponde, `MODEL_PATH`. Verifique que el artefacto de demostración esté disponible en el build. El limitador en memoria no protege un entorno serverless distribuido: use un gateway o Redis. Los cold starts y SHAP pueden incrementar la latencia.
+
+## Limitaciones y controles pendientes
+
+No usar con datos reales sin autorización/finalidad, minimización, retención y borrado, atención de derechos, auditoría, autenticación y revisión humana. También faltan validación local, evaluación de sesgo, monitoreo de drift y aprobación legal/compliance. Consulte [model-card.md](docs/model-card.md) y [data-governance.md](docs/data-governance.md).
