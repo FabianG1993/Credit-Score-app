@@ -15,7 +15,7 @@ from slowapi import Limiter
 from slowapi.errors import RateLimitExceeded
 from slowapi.util import get_remote_address
 
-from api.config import ALLOWED_ORIGINS, DISCLAIMER
+from api.config import ALLOWED_ORIGINS, DISCLAIMER, ROOT_DIR
 from api.schemas import ApplicantData, HealthResponse, PredictionResponse
 from api.service import ModelUnavailableError, load_artifact, model_version, predict
 
@@ -82,5 +82,5 @@ async def predict_risk(data: ApplicantData, request: Request):
 
 
 # One local strategy: FastAPI serves the repository root after API routes.
-from api.config import ROOT_DIR
+
 app.mount("/", StaticFiles(directory=ROOT_DIR, html=True), name="frontend")
