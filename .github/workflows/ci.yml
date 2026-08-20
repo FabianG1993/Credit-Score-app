@@ -8,6 +8,7 @@ jobs:
       - uses: actions/setup-python@v5
         with: { python-version: '3.11' }
       - run: pip install -r requirements.txt pip-audit
+      - run: pip install -e .
       - run: ruff check api model.py tests
       - run: pytest
       - run: pip-audit -r requirements.txt
