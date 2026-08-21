@@ -82,5 +82,10 @@ async def predict_risk(data: ApplicantData, request: Request):
 
 
 # One local strategy: FastAPI serves the repository root after API routes.
-
-app.mount("/", StaticFiles(directory=ROOT_DIR, html=True), name="frontend")
+# On Vercel, static files are served by the CDN (vercel.json routes), so the
+# mount is skipped when the directory does not exist in the serverless sandbox.
+try:
+    if ROOT_DIR.exists():
+        app.mount("/", StaticFiles(directory=ROOT_DIR, html=True), name="frontend")
+except Exception:  # pragma: no cover
+    pass
